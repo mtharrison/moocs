@@ -71,7 +71,7 @@ DARROW          =>
 
  /*
   *  String constants (C syntax)
-  *  Escape sequence \c is accepted for all characters c. Except for 
+  *  Escape sequence \c is accepted for all characters c. Except for
   *  \n \t \b \f, the result is c.
   *
   */
