@@ -8,6 +8,39 @@
  * to the code in the file.  Don't remove anything that was here initially
  */
 %{
+
+/*
+Tokens:
+
+CLASS - done
+ELSE
+FI
+IF
+IN
+INHERITS - done
+LET
+LOOP
+POOL
+THEN
+WHILE
+CASE
+ESAC
+OF
+DARROW - done
+NEW - done
+ISVOID - done
+STR_CONST - done
+INT_CONST - done
+BOOL_CONST
+TYPEID - done
+OBJECTID
+ASSIGN
+NOT
+LE
+ERROR
+LET_STMT
+*/
+
 #include <cool-parse.h>
 #include <stringtab.h>
 #include <utilities.h>
@@ -45,36 +78,80 @@ extern YYSTYPE cool_yylval;
 
 %}
 
-/*
- * Define names for regular expressions here.
- */
+/* *** DECLARATIONS *** */
+
+/* Keywords */
+
+CLASS           ?i:class
+INHERITS        ?i:inherits
+ISVOID          ?i:isvoid
+NEW             ?i:new
+
+/* Operators */
 
 DARROW          =>
 
+/* Names */
+
+OBJECTID  {LCASE}({UCASE}|{LCASE}|[_])+
+TYPEID    {UCASE}({UCASE}|{LCASE}|[_])+
+
+/* Values */
+
+INT_CONST       [0-9]+
+STR_CONST       \".*\"
+
+/* Other */
+
+LCASE           [a-z]
+UCASE           [A-Z]
+WHITESPACE      [\f\r\v\t\n ]+
+LCB             \{
+RCB             \}
+LPRN            \(
+RPRN            \)
+COLN            \:
+CMMA            \,
+SEMI            \;
+PERD            \.
+
 %%
 
- /*
-  *  Nested comments
-  */
+ /* *** RULES *** */
 
+ /* Keywords */
 
- /*
-  *  The multiple-character operators.
-  */
-{DARROW}		{ return (DARROW); }
+{CLASS}     { return CLASS; }
+{INHERITS}  { return INHERITS; }
+{ISVOID}    { return ISVOID; }
+{NEW}       { return NEW; }
 
- /*
-  * Keywords are case-insensitive except for the values true and false,
-  * which must begin with a lower-case letter.
-  */
+ /* Operators */
 
+{DARROW} { return DARROW; }
 
- /*
-  *  String constants (C syntax)
-  *  Escape sequence \c is accepted for all characters c. Except for
-  *  \n \t \b \f, the result is c.
-  *
-  */
+ /* Names */
 
+{OBJECTID} { cool_yylval.symbol = idtable.add_string(yytext); return OBJECTID; }
+{TYPEID}   { cool_yylval.symbol = idtable.add_string(yytext); return TYPEID; }
+
+ /* Values */
+
+{INT_CONST} { cool_yylval.symbol = inttable.add_string(yytext); return INT_CONST; }
+{STR_CONST} { cool_yylval.symbol = stringtable.add_string(yytext); return STR_CONST; }
+
+ /* Other */
+
+{WHITESPACE} { }
+{LCB}        { return int('{'); }
+{RCB}        { return int('}'); }
+{LPRN}       { return int('('); }
+{RPRN}       { return int(')'); }
+{COLN}       { return int(':'); }
+{CMMA}       { return int(','); }
+{SEMI}       { return int(';'); }
+{PERD}       { return int('.'); }
+
+ /* String constants (C syntax) */
 
 %%
