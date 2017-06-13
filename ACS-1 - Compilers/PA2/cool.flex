@@ -2,8 +2,6 @@
  *  The scanner definition for COOL.
  */
 
-%START COMMENT
-
 /*
  *  Stuff enclosed in %{ %} in the first section is copied verbatim to the
  *  output, so headers and global definitions are placed here to be visible
@@ -91,7 +89,9 @@ FI              ?i:fi
 IF              ?i:if
 INHERITS        ?i:inherits
 ISVOID          ?i:isvoid
+LOOP            ?i:loop
 NEW             ?i:new
+POOL            ?i:pool
 THEN            ?i:then
 
 /* Operators */
@@ -133,7 +133,10 @@ MNUS            \-
 TIMS            \*
 DIVD            \/
 NOT             \~
+GT              \>
+LT              \<
 
+%x COMMENT
 
 %%
 
@@ -147,7 +150,9 @@ NOT             \~
 {IF}        { return IF; }
 {INHERITS}  { return INHERITS; }
 {ISVOID}    { return ISVOID; }
+{LOOP}      { return LOOP; }
 {NEW}       { return NEW; }
+{POOL}      { return POOL; }
 {THEN}      { return THEN; }
 
  /* Operators */
@@ -157,6 +162,7 @@ NOT             \~
 
  /* Names */
 
+{OBJECTID} { cool_yylval.symbol = idtable.add_string(yytext); return OBJECTID; }
 {TYPEID}   { cool_yylval.symbol = idtable.add_string(yytext); return TYPEID; }
 
  /* Values */
@@ -166,10 +172,9 @@ NOT             \~
 
  /* Comments */
 
-{SRT_CMMT}           { printf("Starting comment here \n"); BEGIN COMMENT; }
-<COMMENT>{END_CMNT}  { printf("Ending comment here \n"); BEGIN INITIAL; }
-<COMMENT>\n          { printf("Matching here \n"); }
-<COMMENT>.           { return CLASS; }
+{SRT_CMMT}           { BEGIN COMMENT; }
+<COMMENT>{END_CMNT}  { BEGIN INITIAL; }
+<COMMENT>.|\n        { }
 
  /* Other */
 
@@ -188,6 +193,8 @@ NOT             \~
 {TIMS}       { return int('*'); }
 {DIVD}       { return int('/'); }
 {NOT}        { return int('~'); }
+{GT}         { return int('>'); }
+{LT}         { return int('<'); }
 
  /* String constants (C syntax) */
 
