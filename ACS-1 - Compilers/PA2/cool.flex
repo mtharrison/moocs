@@ -13,15 +13,15 @@
 Tokens:
 
 CLASS - done
-ELSE
-FI
-IF
+ELSE - done
+FI - done
+IF - done
 IN
 INHERITS - done
 LET
 LOOP
 POOL
-THEN
+THEN - done
 WHILE
 CASE
 ESAC
@@ -33,8 +33,8 @@ STR_CONST - done
 INT_CONST - done
 BOOL_CONST
 TYPEID - done
-OBJECTID
-ASSIGN
+OBJECTID - done
+ASSIGN - done
 NOT
 LE
 ERROR
@@ -83,18 +83,23 @@ extern YYSTYPE cool_yylval;
 /* Keywords */
 
 CLASS           ?i:class
+ELSE            ?i:else
+FI              ?i:fi
+IF              ?i:if
 INHERITS        ?i:inherits
 ISVOID          ?i:isvoid
 NEW             ?i:new
+THEN            ?i:then
 
 /* Operators */
 
 DARROW          =>
+ASSIGN          <-
 
 /* Names */
 
-OBJECTID  {LCASE}({UCASE}|{LCASE}|[_])+
-TYPEID    {UCASE}({UCASE}|{LCASE}|[_])+
+OBJECTID  {LCASE}({UCASE}|{LCASE}|[_])*
+TYPEID    {UCASE}({UCASE}|{LCASE}|[_])*
 
 /* Values */
 
@@ -114,6 +119,13 @@ COLN            \:
 CMMA            \,
 SEMI            \;
 PERD            \.
+EQAL            \=
+PLUS            \+
+MNUS            \-
+TIMS            \*
+DIVD            \/
+NOT             \~
+
 
 %%
 
@@ -122,12 +134,17 @@ PERD            \.
  /* Keywords */
 
 {CLASS}     { return CLASS; }
+{ELSE}      { return ELSE; }
+{FI}        { return FI; }
+{IF}        { return IF; }
 {INHERITS}  { return INHERITS; }
 {ISVOID}    { return ISVOID; }
 {NEW}       { return NEW; }
+{THEN}      { return THEN; }
 
  /* Operators */
 
+{ASSIGN} { return ASSIGN; }
 {DARROW} { return DARROW; }
 
  /* Names */
@@ -151,6 +168,12 @@ PERD            \.
 {CMMA}       { return int(','); }
 {SEMI}       { return int(';'); }
 {PERD}       { return int('.'); }
+{EQAL}       { return int('='); }
+{PLUS}       { return int('+'); }
+{MNUS}       { return int('-'); }
+{TIMS}       { return int('*'); }
+{DIVD}       { return int('/'); }
+{NOT}        { return int('~'); }
 
  /* String constants (C syntax) */
 
