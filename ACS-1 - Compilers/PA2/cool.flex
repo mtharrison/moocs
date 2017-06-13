@@ -1,14 +1,49 @@
-
 /*
  *  The scanner definition for COOL.
  */
+
+%START COMMENT
 
 /*
  *  Stuff enclosed in %{ %} in the first section is copied verbatim to the
  *  output, so headers and global definitions are placed here to be visible
  * to the code in the file.  Don't remove anything that was here initially
  */
+
 %{
+
+/*
+Tokens:
+
+CLASS - done
+ELSE - done
+FI - done
+IF - done
+IN
+INHERITS - done
+LET
+LOOP
+POOL
+THEN - done
+WHILE
+CASE
+ESAC
+OF
+DARROW - done
+NEW - done
+ISVOID - done
+STR_CONST - done
+INT_CONST - done
+BOOL_CONST
+TYPEID - done
+OBJECTID - done
+ASSIGN - done
+NOT
+LE
+ERROR
+LET_STMT
+*/
+
 #include <cool-parse.h>
 #include <stringtab.h>
 #include <utilities.h>
@@ -29,13 +64,14 @@ extern FILE *fin; /* we read from this file */
  */
 #undef YY_INPUT
 #define YY_INPUT(buf,result,max_size) \
-  if ( (result = fread( (char*)buf, sizeof(char), max_size, fin)) < 0) \
-    YY_FATAL_ERROR( "read() in flex scanner failed");
+	if ( (result = fread( (char*)buf, sizeof(char), max_size, fin)) < 0) \
+		YY_FATAL_ERROR( "read() in flex scanner failed");
 
 char string_buf[MAX_STR_CONST]; /* to assemble string constants */
 char *string_buf_ptr;
 
 extern int curr_lineno;
+extern int verbose_flag;
 
 extern YYSTYPE cool_yylval;
 
@@ -43,224 +79,116 @@ extern YYSTYPE cool_yylval;
  *  Add Your own definitions here
  */
 
- /* Error messages */
-#define UNTERMINATED_STR_ERR "Unterminated string constant"
-#define EOF_IN_STR_ERR "EOF in string constant"
-#define NULL_IN_STR_ERR "String contains null character"
-#define TOO_LONG_STR_ERR "String constant too long"
-#define EOF_IN_COMMENT "EOF in comment"
-#define UNMATCHED_COMMENT_ERR "Unmatched *)"
-
- /* Check whether a current string in the buffer is too long */
-bool is_string_too_long(void);
- /* To support nested comments */
-int open_comment_cnt;
-
 %}
 
-%option noyywrap
+/* *** DECLARATIONS *** */
 
-/*
- * Define names for regular expressions here.
- */
-ID_CHAR [a-zA-Z0-9_]
+/* Keywords */
 
-/*
- * Start conditions.
- */
-%x COMMENT STRING STRING_ERR
+CLASS           ?i:class
+ELSE            ?i:else
+FI              ?i:fi
+IF              ?i:if
+INHERITS        ?i:inherits
+ISVOID          ?i:isvoid
+NEW             ?i:new
+THEN            ?i:then
+
+/* Operators */
+
+DARROW          =>
+ASSIGN          <-
+
+/* Names */
+
+OBJECTID  {LCASE}({UCASE}|{LCASE}|[_])*
+TYPEID    {UCASE}({UCASE}|{LCASE}|[_])*
+
+/* Values */
+
+INT_CONST       [0-9]+
+STR_CONST       \".*\"
+
+/* Comments */
+
+SRT_CMMT        \(\*
+END_CMNT        \*\)
+
+/* Other */
+
+LCASE           [a-z]
+UCASE           [A-Z]
+WHITESPACE      [\f\r\v\t\n ]+
+LCB             \{
+RCB             \}
+LPRN            \(
+RPRN            \)
+COLN            \:
+CMMA            \,
+SEMI            \;
+PERD            \.
+EQAL            \=
+PLUS            \+
+MNUS            \-
+TIMS            \*
+DIVD            \/
+NOT             \~
+
+
 %%
 
- /*
-  * Define regular expressions for the tokens of COOL here. Make sure, you
-  * handle correctly special cases, like:
-  *   - Nested comments
-  *   - String constants: They use C like systax and can contain escape
-  *     sequences. Escape sequence \c is accepted for all characters c. Except
-  *     for \n \t \b \f, the result is c.
-  *   - Keywords: They are case-insensitive except for the values true and
-  *     false, which must begin with a lower-case letter.
-  *   - Multiple-character operators (like <-): The scanner should produce a
-  *     single token for every such operator.
-  *   - Line counting: You should keep the global variable curr_lineno updated
-  *     with the correct line number
-  */
-
- /* Multi-line Comment */
-<INITIAL,COMMENT>"(*" {
-    BEGIN(COMMENT);
-    ++open_comment_cnt;
-}
-
-<COMMENT><<EOF>> {
-    BEGIN(INITIAL);
-    yylval.error_msg = EOF_IN_COMMENT;
-    return ERROR;
-}
-
-<COMMENT>"*)" {
-    --open_comment_cnt;
-    if (!open_comment_cnt)
-        BEGIN(INITIAL);
-}
-
-<INITIAL>"*)" {
-    yylval.error_msg = UNMATCHED_COMMENT_ERR;
-    return ERROR;
-}
-
-<COMMENT>\n { ++curr_lineno; }
-
-<COMMENT>. { /* Discard strings */ }
-
- /* Single-line Comment */
-<INITIAL>--.* { /* Discard strings */ }
-
- /* Strings */
-<INITIAL>\" {
-    BEGIN(STRING);
-    string_buf_ptr = string_buf;
-}
-
-<STRING>\" {
-    BEGIN(INITIAL);
-    *string_buf_ptr = '\0';
-    yylval.symbol = stringtable.add_string(string_buf);
-    return STR_CONST;
-}
-
-<STRING>\n {
-    BEGIN(INITIAL);
-    yylval.error_msg = UNTERMINATED_STR_ERR;
-    ++curr_lineno;
-    return ERROR;
-}
-
-<STRING><<EOF>> {
-    BEGIN(INITIAL);
-    yylval.error_msg = EOF_IN_STR_ERR;
-    return ERROR;
-}
-
-<STRING>\0 {
-    yylval.error_msg = NULL_IN_STR_ERR;
-    return ERROR;
-}
-
-<STRING>\\\n {
-    ++curr_lineno;
-    *string_buf_ptr++ = '\n';
-}
-
-<STRING>\\. {
-    if (is_string_too_long())
-        return ERROR;
-
-    char escaped = yytext[1];
-    switch (escaped) {
-    case 'n':
-        *string_buf_ptr = '\n';
-        break;
-    case 't':
-        *string_buf_ptr = '\t';
-        break;
-    case 'b':
-        *string_buf_ptr = '\b';
-        break;
-    case 'f':
-        *string_buf_ptr = '\f';
-        break;
-    default:
-        *string_buf_ptr = escaped;
-        break;
-    }
-    ++string_buf_ptr;
-}
-
-<STRING>. {
-    if (is_string_too_long())
-        return ERROR;
-    *string_buf_ptr++ = yytext[0];
-}
-
-<STRING_ERR>\n {
-    BEGIN(INITIAL);
-    ++curr_lineno;
-}
-
-<STRING_ERR>\" { BEGIN(INITIAL); }
-
-<STRING_ERR>. { /* Discard strings */ }
+ /* *** RULES *** */
 
  /* Keywords */
-(?i:class) { return CLASS; }
-(?i:else) { return ELSE; }
-(?i:fi) { return FI; }
-(?i:if) { return IF; }
-(?i:in) { return IN; }
-(?i:inherits) { return INHERITS; }
-(?i:isvoid) { return ISVOID; }
-(?i:let) { return LET; }
-(?i:loop) { return LOOP; }
-(?i:pool) { return POOL; }
-(?i:then) { return THEN; }
-(?i:while) { return WHILE; }
-(?i:case) { return CASE; }
-(?i:esac) { return ESAC; }
-(?i:new) { return NEW; }
-(?i:of) { return OF; }
-(?i:not) { return NOT; }
-f(?i:alse) {
-    yylval.boolean = 0;
-    return BOOL_CONST;
-}
-t(?i:rue) {
-    yylval.boolean = 1;
-    return BOOL_CONST;
-}
 
- /* Integers */
-[0-9]+ {
-    yylval.symbol = inttable.add_string(yytext);
-    return INT_CONST;
-}
+{CLASS}     { return CLASS; }
+{ELSE}      { return ELSE; }
+{FI}        { return FI; }
+{IF}        { return IF; }
+{INHERITS}  { return INHERITS; }
+{ISVOID}    { return ISVOID; }
+{NEW}       { return NEW; }
+{THEN}      { return THEN; }
 
- /* Type Identifiers */
-[A-Z]{ID_CHAR}* {
-    yylval.symbol = inttable.add_string(yytext);
-    return TYPEID;
-}
+ /* Operators */
 
- /* Object Identifiers */
-[a-z]{ID_CHAR}* {
-    yylval.symbol = inttable.add_string(yytext);
-    return OBJECTID;
-}
+{ASSIGN} { return ASSIGN; }
+{DARROW} { return DARROW; }
 
- /* Special Notation */
-"<-" { return ASSIGN; }
-"<=" { return LE; }
-"=>" { return DARROW; }
-[{}()@,.+\-*/~<=:;] { return yytext[0]; }
+ /* Names */
 
- /* White Space */
-\n { ++curr_lineno; }
-[ \n\f\r\t\v] { /* Discard strings */ }
+{TYPEID}   { cool_yylval.symbol = idtable.add_string(yytext); return TYPEID; }
 
- /* An invalid character */
-. {
-    yylval.error_msg = yytext;
-    return ERROR;
-}
+ /* Values */
+
+{INT_CONST} { cool_yylval.symbol = inttable.add_string(yytext); return INT_CONST; }
+{STR_CONST} { cool_yylval.symbol = stringtable.add_string(yytext); return STR_CONST; }
+
+ /* Comments */
+
+{SRT_CMMT}           { printf("Starting comment here \n"); BEGIN COMMENT; }
+<COMMENT>{END_CMNT}  { printf("Ending comment here \n"); BEGIN INITIAL; }
+<COMMENT>\n          { printf("Matching here \n"); }
+<COMMENT>.           { return CLASS; }
+
+ /* Other */
+
+{WHITESPACE} { }
+{LCB}        { return int('{'); }
+{RCB}        { return int('}'); }
+{LPRN}       { return int('('); }
+{RPRN}       { return int(')'); }
+{COLN}       { return int(':'); }
+{CMMA}       { return int(','); }
+{SEMI}       { return int(';'); }
+{PERD}       { return int('.'); }
+{EQAL}       { return int('='); }
+{PLUS}       { return int('+'); }
+{MNUS}       { return int('-'); }
+{TIMS}       { return int('*'); }
+{DIVD}       { return int('/'); }
+{NOT}        { return int('~'); }
+
+ /* String constants (C syntax) */
 
 %%
-bool is_string_too_long() {
-    int str_len = string_buf_ptr - string_buf;
-    if (str_len >= MAX_STR_CONST - 1) {
-        BEGIN(STRING_ERR);
-        yylval.error_msg = TOO_LONG_STR_ERR;
-        return true;
-    }
-
-    return false;
-}
