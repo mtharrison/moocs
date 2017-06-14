@@ -32,7 +32,7 @@ NEW - done
 ISVOID - done
 STR_CONST - done
 INT_CONST - done
-BOOL_CONST
+BOOL_CONST - done
 TYPEID - done
 OBJECTID - done
 ASSIGN - done
@@ -105,15 +105,17 @@ DARROW          =>
 ASSIGN          <-
 LE              <=
 
-/* Names */
-
-OBJECTID  {LCASE}({UCASE}|{LCASE}|[_])*
-TYPEID    {UCASE}({UCASE}|{LCASE}|[_])*
-
 /* Values */
 
 INT_CONST       [0-9]+
 STR_CONST       \".*\"
+BOOL_TRUE       t(?i:rue)
+BOOL_FALSE      f(?i:alse)
+
+/* Names */
+
+OBJECTID  {LCASE}({UCASE}|{LCASE}|[_])*
+TYPEID    {UCASE}({UCASE}|{LCASE}|[_])*
 
 /* Comments */
 
@@ -175,15 +177,18 @@ RSQB            \]
 {LE}     { return LE; }
 {NOT}    { return NOT; }
 
+ /* Values */
+
+{BOOL_TRUE}  { cool_yylval.boolean = true; return BOOL_CONST; }
+{BOOL_FALSE} { cool_yylval.boolean = false; return BOOL_CONST; }
+{INT_CONST}  { cool_yylval.symbol = inttable.add_string(yytext); return INT_CONST; }
+{STR_CONST}  { cool_yylval.symbol = stringtable.add_string(yytext); return STR_CONST; }
+
  /* Names */
 
 {OBJECTID} { cool_yylval.symbol = idtable.add_string(yytext); return OBJECTID; }
 {TYPEID}   { cool_yylval.symbol = idtable.add_string(yytext); return TYPEID; }
 
- /* Values */
-
-{INT_CONST} { cool_yylval.symbol = inttable.add_string(yytext); return INT_CONST; }
-{STR_CONST} { cool_yylval.symbol = stringtable.add_string(yytext); return STR_CONST; }
 
  /* Comments */
 
