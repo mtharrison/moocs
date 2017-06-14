@@ -10,38 +10,6 @@
 
 %{
 
-/*
-Tokens:
-
-CLASS - done
-ELSE - done
-FI - done
-IF - done
-IN - done
-INHERITS - done
-LET - done
-LOOP - done
-POOL - done
-THEN - done
-WHILE - done
-CASE - done
-ESAC - done
-OF - done
-DARROW - done
-NEW - done
-ISVOID - done
-STR_CONST - done
-INT_CONST - done
-BOOL_CONST - done
-TYPEID - done
-OBJECTID - done
-ASSIGN - done
-NOT - done
-LE - done
-ERROR - done
-LET_STMT
-*/
-
 #include <cool-parse.h>
 #include <stringtab.h>
 #include <utilities.h>
@@ -67,6 +35,8 @@ extern FILE *fin; /* we read from this file */
 
 char string_buf[MAX_STR_CONST]; /* to assemble string constants */
 char *string_buf_ptr;
+
+extern int comments = 0;
 
 extern int curr_lineno;
 extern int verbose_flag;
@@ -119,6 +89,7 @@ TYPEID    {UCASE}({UCASE}|{LCASE}|[_])*
 
 /* Comments */
 
+SNGL_CMMT       --.*
 SRT_CMMT        \(\*
 END_CMNT        \*\)
 
@@ -184,17 +155,17 @@ RSQB            \]
 {INT_CONST}  { cool_yylval.symbol = inttable.add_string(yytext); return INT_CONST; }
 {STR_CONST}  { cool_yylval.symbol = stringtable.add_string(yytext); return STR_CONST; }
 
+ /* Comments */
+
+{SNGL_CMMT}                  { }
+<INITIAL,COMMENT>{SRT_CMMT}  { comments++; BEGIN COMMENT; }
+<COMMENT>{END_CMNT}          { comments--; if(comments == 0) BEGIN INITIAL; }
+<COMMENT>.|\n                { }
+
  /* Names */
 
 {OBJECTID} { cool_yylval.symbol = idtable.add_string(yytext); return OBJECTID; }
 {TYPEID}   { cool_yylval.symbol = idtable.add_string(yytext); return TYPEID; }
-
-
- /* Comments */
-
-{SRT_CMMT}           { BEGIN COMMENT; }
-<COMMENT>{END_CMNT}  { BEGIN INITIAL; }
-<COMMENT>.|\n        { }
 
  /* Other */
 
