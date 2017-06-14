@@ -17,16 +17,16 @@ CLASS - done
 ELSE - done
 FI - done
 IF - done
-IN
+IN - done
 INHERITS - done
-LET
-LOOP
-POOL
+LET - done
+LOOP - done
+POOL - done
 THEN - done
-WHILE
-CASE
-ESAC
-OF
+WHILE - done
+CASE - done
+ESAC - done
+OF - done
 DARROW - done
 NEW - done
 ISVOID - done
@@ -36,9 +36,9 @@ BOOL_CONST
 TYPEID - done
 OBJECTID - done
 ASSIGN - done
-NOT
-LE
-ERROR
+NOT - done
+LE - done
+ERROR - done
 LET_STMT
 */
 
@@ -83,21 +83,27 @@ extern YYSTYPE cool_yylval;
 
 /* Keywords */
 
+CASE            ?i:case
 CLASS           ?i:class
 ELSE            ?i:else
+ESAC            ?i:esac
 FI              ?i:fi
 IF              ?i:if
+IN              ?i:in
 INHERITS        ?i:inherits
 ISVOID          ?i:isvoid
+LET             ?i:let
 LOOP            ?i:loop
 NEW             ?i:new
 POOL            ?i:pool
 THEN            ?i:then
+WHILE           ?i:while
 
 /* Operators */
 
 DARROW          =>
 ASSIGN          <-
+LE              <=
 
 /* Names */
 
@@ -135,6 +141,8 @@ DIVD            \/
 NOT             \~
 GT              \>
 LT              \<
+LSQB            \[
+RSQB            \]
 
 %x COMMENT
 
@@ -144,21 +152,28 @@ LT              \<
 
  /* Keywords */
 
+{CASE}      { return CASE; }
 {CLASS}     { return CLASS; }
 {ELSE}      { return ELSE; }
+{ESAC}      { return ESAC; }
 {FI}        { return FI; }
 {IF}        { return IF; }
+{IN}        { return IN; }
 {INHERITS}  { return INHERITS; }
 {ISVOID}    { return ISVOID; }
+{LET}       { return LET; }
 {LOOP}      { return LOOP; }
 {NEW}       { return NEW; }
 {POOL}      { return POOL; }
 {THEN}      { return THEN; }
+{WHILE}     { return WHILE; }
 
  /* Operators */
 
 {ASSIGN} { return ASSIGN; }
 {DARROW} { return DARROW; }
+{LE}     { return LE; }
+{NOT}    { return NOT; }
 
  /* Names */
 
@@ -192,9 +207,10 @@ LT              \<
 {MNUS}       { return int('-'); }
 {TIMS}       { return int('*'); }
 {DIVD}       { return int('/'); }
-{NOT}        { return int('~'); }
 {GT}         { return int('>'); }
 {LT}         { return int('<'); }
+{LSQB}       { return int('['); }
+{RSQB}       { return int(']'); }
 
  /* String constants (C syntax) */
 
