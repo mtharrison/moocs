@@ -36,7 +36,7 @@ extern FILE *fin; /* we read from this file */
 char string_buf[MAX_STR_CONST]; /* to assemble string constants */
 char *string_buf_ptr;
 
-extern int comments = 0;
+int comments = 0;
 
 extern int curr_lineno;
 extern int verbose_flag;
@@ -97,7 +97,8 @@ END_CMNT        \*\)
 
 LCASE           [a-z]
 UCASE           [A-Z]
-WHITESPACE      [\f\r\v\t\n ]+
+WHITESPACE      [\f\r\v\t ]+
+NEWLINE         \n
 LCB             \{
 RCB             \}
 LPRN            \(
@@ -116,6 +117,8 @@ GT              \>
 LT              \<
 LSQB            \[
 RSQB            \]
+
+ANY_CHAR		.
 
 %x COMMENT
 
@@ -160,7 +163,8 @@ RSQB            \]
 {SNGL_CMMT}                  { }
 <INITIAL,COMMENT>{SRT_CMMT}  { comments++; BEGIN COMMENT; }
 <COMMENT>{END_CMNT}          { comments--; if(comments == 0) BEGIN INITIAL; }
-<COMMENT>.|\n                { }
+<COMMENT>{ANY_CHAR}          { }
+<COMMENT>{NEWLINE}           { curr_lineno++; }
 
  /* Names */
 
@@ -170,6 +174,7 @@ RSQB            \]
  /* Other */
 
 {WHITESPACE} { }
+{NEWLINE}    { curr_lineno++; }
 {LCB}        { return int('{'); }
 {RCB}        { return int('}'); }
 {LPRN}       { return int('('); }
@@ -189,5 +194,10 @@ RSQB            \]
 {RSQB}       { return int(']'); }
 
  /* String constants (C syntax) */
+
+ /* Errors */
+
+{ANY_CHAR}  { cool_yylval.error_msg = yytext; return ERROR; }
+
 
 %%

@@ -1,5 +1,5 @@
---here is a thing
-if pool loop
-(* here is a (* nested comment *) *)
-"a thing"
-"a\nthing"
+class Main inherits IO {
+   main(): SELF_TYPE {
+	out_string("Hello, World.\n")
+   };
+};
