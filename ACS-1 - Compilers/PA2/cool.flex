@@ -156,7 +156,16 @@ ANY_CHAR		.
 {BOOL_TRUE}  { cool_yylval.boolean = true; return BOOL_CONST; }
 {BOOL_FALSE} { cool_yylval.boolean = false; return BOOL_CONST; }
 {INT_CONST}  { cool_yylval.symbol = inttable.add_string(yytext); return INT_CONST; }
-{STR_CONST}  { cool_yylval.symbol = stringtable.add_string(yytext); return STR_CONST; }
+{STR_CONST}  {
+    yytext++;   // Drop the initial "
+    char *ptr = yytext;
+    while (*ptr != '"') {
+        ptr++;
+    }
+    *ptr = '\0'; // Drop the terminal "
+    cool_yylval.symbol = stringtable.add_string(yytext);
+    return STR_CONST;
+}
 
  /* Comments */
 
