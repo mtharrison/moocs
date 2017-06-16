@@ -1,2 +1,1 @@
-
-	{ abort(); ""; }  -- the "" is needed to satisfy the typchecker
+"This is a string"

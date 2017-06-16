@@ -78,7 +78,6 @@ LE              <=
 /* Values */
 
 INT_CONST       [0-9]+
-STR_CONST       \".*\"
 BOOL_TRUE       t(?i:rue)
 BOOL_FALSE      f(?i:alse)
 
@@ -122,7 +121,7 @@ TILDE           \~
 
 ANY_CHAR		.
 
-%x COMMENT
+%x COMMENT STRING
 
 %%
 
@@ -154,19 +153,17 @@ ANY_CHAR		.
 
  /* Values */
 
-{BOOL_TRUE}  { cool_yylval.boolean = true; return BOOL_CONST; }
-{BOOL_FALSE} { cool_yylval.boolean = false; return BOOL_CONST; }
-{INT_CONST}  { cool_yylval.symbol = inttable.add_string(yytext); return INT_CONST; }
-<INITIAL>{STR_CONST}  {
-    yytext++;   // Drop the initial "
-    char *ptr = yytext;
-    while (*ptr != '"') {
-        ptr++;
-    }
-    *ptr = '\0'; // Drop the terminal "
-    cool_yylval.symbol = stringtable.add_string(yytext);
-    return STR_CONST;
-}
+{BOOL_TRUE}                 { cool_yylval.boolean = true; return BOOL_CONST; }
+{BOOL_FALSE}                { cool_yylval.boolean = false; return BOOL_CONST; }
+{INT_CONST}                 { cool_yylval.symbol = inttable.add_string(yytext); return INT_CONST; }
+
+
+ /* Strings */
+
+<INITIAL>\"                 { strcpy(string_buf, ""); BEGIN STRING; }
+<STRING>[^\"]               { strcat(string_buf, yytext); }
+<STRING>\"                  { BEGIN INITIAL; cool_yylval.symbol = stringtable.add_string(string_buf); return STR_CONST; }
+
 
  /* Comments */
 
