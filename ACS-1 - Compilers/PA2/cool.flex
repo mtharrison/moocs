@@ -84,8 +84,8 @@ BOOL_FALSE      f(?i:alse)
 
 /* Names */
 
-OBJECTID  {LCASE}({UCASE}|{LCASE}|[_])*
-TYPEID    {UCASE}({UCASE}|{LCASE}|[_])*
+OBJECTID  {LCASE}({UCASE}|{LCASE}|{DIGIT}|[_])*
+TYPEID    {UCASE}({UCASE}|{LCASE}|{DIGIT}|[_])*
 
 /* Comments */
 
@@ -97,6 +97,7 @@ END_CMNT        \*\)
 
 LCASE           [a-z]
 UCASE           [A-Z]
+DIGIT           [0-9]
 WHITESPACE      [\f\r\v\t ]+
 NEWLINE         \n
 LCB             \{
@@ -117,6 +118,7 @@ GT              \>
 LT              \<
 LSQB            \[
 RSQB            \]
+TILDE           \~
 
 ANY_CHAR		.
 
@@ -149,14 +151,13 @@ ANY_CHAR		.
 {ASSIGN} { return ASSIGN; }
 {DARROW} { return DARROW; }
 {LE}     { return LE; }
-{NOT}    { return NOT; }
 
  /* Values */
 
 {BOOL_TRUE}  { cool_yylval.boolean = true; return BOOL_CONST; }
 {BOOL_FALSE} { cool_yylval.boolean = false; return BOOL_CONST; }
 {INT_CONST}  { cool_yylval.symbol = inttable.add_string(yytext); return INT_CONST; }
-{STR_CONST}  {
+<INITIAL>{STR_CONST}  {
     yytext++;   // Drop the initial "
     char *ptr = yytext;
     while (*ptr != '"') {
@@ -201,6 +202,7 @@ ANY_CHAR		.
 {LT}         { return int('<'); }
 {LSQB}       { return int('['); }
 {RSQB}       { return int(']'); }
+{TILDE}      { return int('~'); }
 
  /* String constants (C syntax) */
 
