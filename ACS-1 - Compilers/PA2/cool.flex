@@ -68,6 +68,8 @@ NEW             ?i:new
 POOL            ?i:pool
 THEN            ?i:then
 WHILE           ?i:while
+NOT             ?i:not
+OF              ?i:of
 
 /* Operators */
 
@@ -112,7 +114,6 @@ PLUS            \+
 MNUS            \-
 TIMS            \*
 DIVD            \/
-NOT             \~
 GT              \>
 LT              \<
 LSQB            \[
@@ -144,6 +145,8 @@ ANY_CHAR		.
 {POOL}      { return POOL; }
 {THEN}      { return THEN; }
 {WHILE}     { return WHILE; }
+{NOT}       { return NOT; }
+{OF}        { return OF; }
 
  /* Operators */
 
@@ -163,6 +166,7 @@ ANY_CHAR		.
 <INITIAL>\"                 { strcpy(string_buf, ""); BEGIN STRING; }
 <STRING>[^\"]               { strcat(string_buf, yytext); }
 <STRING>\\n                 { strcat(string_buf, "\n"); }
+<STRING>\\t                 { strcat(string_buf, "\t"); }
 <STRING>\"                  { BEGIN INITIAL; cool_yylval.symbol = stringtable.add_string(string_buf); return STR_CONST; }
 
 
