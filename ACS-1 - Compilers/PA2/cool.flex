@@ -162,6 +162,7 @@ ANY_CHAR		.
 
 <INITIAL>\"                 { strcpy(string_buf, ""); BEGIN STRING; }
 <STRING>[^\"]               { strcat(string_buf, yytext); }
+<STRING>\\n                 { strcat(string_buf, "\n"); }
 <STRING>\"                  { BEGIN INITIAL; cool_yylval.symbol = stringtable.add_string(string_buf); return STR_CONST; }
 
 
