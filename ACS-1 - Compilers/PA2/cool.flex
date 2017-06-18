@@ -217,6 +217,11 @@ ANY_CHAR		.
 <COMMENT>{END_CMNT}          { comments--; if(comments == 0) BEGIN INITIAL; }
 <COMMENT>{ANY_CHAR}          { }
 <COMMENT>{NEWLINE}           { curr_lineno++; }
+<COMMENT><<EOF>>             {
+    cool_yylval.error_msg = "EOF in comment";
+    BEGIN INITIAL;
+    return ERROR;
+}
 
  /* Names */
 
