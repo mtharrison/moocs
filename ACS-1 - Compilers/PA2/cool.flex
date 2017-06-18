@@ -164,14 +164,10 @@ ANY_CHAR		.
 
  /* Strings */
 
-<INITIAL>\"                 { strcpy(string_buf, ""); BEGIN STRING; }
-<STRING>[^\"]               { strcat(string_buf, yytext); }
-<STRING>\\\n                { strcat(string_buf, "\n"); }
-<STRING>\\n                 { strcat(string_buf, "\n"); }
-<STRING>\\t                 { strcat(string_buf, "\t"); }
-<STRING>\\b                 { strcat(string_buf, "\b"); }
-<STRING>\\f                 { strcat(string_buf, "\f"); }
-<STRING>\\.                 { strcat(string_buf, yytext + 1); }
+<INITIAL>\" {
+    strcpy(string_buf, "");
+    BEGIN STRING;
+}
 
 <STRING>\" {
     BEGIN INITIAL;
@@ -179,14 +175,25 @@ ANY_CHAR		.
     return STR_CONST;
 }
 
+<STRING>\\b                 { strcat(string_buf, "\b"); }
+<STRING>\\t                 { strcat(string_buf, "\t"); }
+<STRING>\\n                 { strcat(string_buf, "\n"); }
+<STRING>\\f                 { strcat(string_buf, "\f"); }
+    /* NULL */
+<STRING>\\.                 { strcat(string_buf, yytext + 1); }
+<STRING>\\\n                { strcat(string_buf, "\n"); }
+
 <STRING>\n {
     cool_yylval.error_msg = "Unterminated string constant";
     BEGIN INITIAL;
     return ERROR;
 }
 
-<STRING><<EOF>>             { cool_yylval.error_msg = "EOF in string constant"; BEGIN INITIAL; return ERROR; }
-
+<STRING><<EOF>>             {
+    cool_yylval.error_msg = "EOF in string constant";
+    BEGIN INITIAL;
+    return ERROR;
+}
 
  /* Comments */
 
@@ -232,5 +239,6 @@ ANY_CHAR		.
 
 {ANY_CHAR}  { cool_yylval.error_msg = yytext; return ERROR; }
 
+<STRING>([^"\\\n\x00])+  { strcat(string_buf, yytext); }
 
 %%

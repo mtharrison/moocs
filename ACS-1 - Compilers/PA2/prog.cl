@@ -1,6 +1,12 @@
-"\0\1\2\\0\\1\\2\t\f\b\n\r\a\b\c\d\e\f\g"
-
-"\"this is still inside the string"
-
-"I'm about to excape a newline \
+"I'm not going to escape this newline
 "
+
+"This is also not escaped \\
+"
+
+"This is, though \\\
+"
+
+"\\"
+
+"It's fine to have this: \n in a string"
