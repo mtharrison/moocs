@@ -114,10 +114,7 @@ PLUS            \+
 MNUS            \-
 TIMS            \*
 DIVD            \/
-GT              \>
 LT              \<
-LSQB            \[
-RSQB            \]
 TILDE           \~
 AT              \@
 
@@ -243,10 +240,7 @@ ANY_CHAR		.
 {MNUS}       { return int('-'); }
 {TIMS}       { return int('*'); }
 {DIVD}       { return int('/'); }
-{GT}         { return int('>'); }
 {LT}         { return int('<'); }
-{LSQB}       { return int('['); }
-{RSQB}       { return int(']'); }
 {TILDE}      { return int('~'); }
 {AT}         { return int('@'); }
 
