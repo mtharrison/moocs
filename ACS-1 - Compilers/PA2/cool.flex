@@ -18,6 +18,13 @@
 #define yylval cool_yylval
 #define yylex  cool_yylex
 
+#define CHECK_SIZE()  \
+    if ((strlen(string_buf) + 1) >= MAX_STR_CONST) { \
+        BEGIN STRINGERROR; \
+        cool_yylval.error_msg = "String contains escaped null character."; \
+        return ERROR; \
+    }
+
 /* Max size of string constants */
 #define MAX_STR_CONST 1025
 #define YY_NO_UNPUT   /* keep g++ happy */
@@ -172,10 +179,10 @@ ANY_CHAR		.
     return STR_CONST;
 }
 
-<STRING>\\b                 { strcat(string_buf, "\b"); }
-<STRING>\\t                 { strcat(string_buf, "\t"); }
-<STRING>\\n                 { strcat(string_buf, "\n"); }
-<STRING>\\f                 { strcat(string_buf, "\f"); }
+<STRING>\\b                 { CHECK_SIZE(); strcat(string_buf, "\b"); }
+<STRING>\\t                 { CHECK_SIZE(); strcat(string_buf, "\t"); }
+<STRING>\\n                 { CHECK_SIZE(); strcat(string_buf, "\n"); }
+<STRING>\\f                 { CHECK_SIZE(); strcat(string_buf, "\f"); }
 
 <STRING>\\\0  {
     BEGIN STRINGERROR;
@@ -189,8 +196,8 @@ ANY_CHAR		.
     return ERROR;
 }
 
-<STRING>\\.                 { strcat(string_buf, yytext + 1); }
-<STRING>\\\n                { strcat(string_buf, "\n"); }
+<STRING>\\.                 { CHECK_SIZE(); strcat(string_buf, yytext + 1); }
+<STRING>\\\n                { CHECK_SIZE(); strcat(string_buf, "\n"); }
 
 <STRING>\n {
     cool_yylval.error_msg = "Unterminated string constant";
@@ -255,6 +262,6 @@ ANY_CHAR		.
 
 {ANY_CHAR}  { cool_yylval.error_msg = yytext; return ERROR; }
 
-<STRING>([^"\\\n\0])+  { strcat(string_buf, yytext); }
+<STRING>([^"\\\n\0])  { CHECK_SIZE(); strcat(string_buf, yytext); }
 
 %%
