@@ -123,7 +123,7 @@ AT              \@
 
 ANY_CHAR		.
 
-%x COMMENT STRING
+%x COMMENT STRING STRINGERROR
 
 %%
 
@@ -179,7 +179,19 @@ ANY_CHAR		.
 <STRING>\\t                 { strcat(string_buf, "\t"); }
 <STRING>\\n                 { strcat(string_buf, "\n"); }
 <STRING>\\f                 { strcat(string_buf, "\f"); }
-    /* NULL */
+
+<STRING>\\\0  {
+    BEGIN STRINGERROR;
+    cool_yylval.error_msg = "String contains escaped null character.";
+    return ERROR;
+}
+
+<STRING>\0  {
+    BEGIN STRINGERROR;
+    cool_yylval.error_msg = "String contains null character.";
+    return ERROR;
+}
+
 <STRING>\\.                 { strcat(string_buf, yytext + 1); }
 <STRING>\\\n                { strcat(string_buf, "\n"); }
 
@@ -194,6 +206,11 @@ ANY_CHAR		.
     BEGIN INITIAL;
     return ERROR;
 }
+
+<STRINGERROR>[^\\]\n    { BEGIN(INITIAL); }
+<STRINGERROR>\"         { BEGIN(INITIAL); }
+<STRINGERROR>.          {}
+<STRINGERROR>\n         {}
 
  /* Comments */
 
@@ -239,6 +256,6 @@ ANY_CHAR		.
 
 {ANY_CHAR}  { cool_yylval.error_msg = yytext; return ERROR; }
 
-<STRING>([^"\\\n\x00])+  { strcat(string_buf, yytext); }
+<STRING>([^"\\\n\0])+  { strcat(string_buf, yytext); }
 
 %%
