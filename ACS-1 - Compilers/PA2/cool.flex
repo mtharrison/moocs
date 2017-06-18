@@ -119,6 +119,7 @@ LT              \<
 LSQB            \[
 RSQB            \]
 TILDE           \~
+AT              \@
 
 ANY_CHAR		.
 
@@ -166,13 +167,17 @@ ANY_CHAR		.
 <INITIAL>\"                 { strcpy(string_buf, ""); BEGIN STRING; }
 <STRING>[^\"]               { strcat(string_buf, yytext); }
 <STRING>\\n                 { strcat(string_buf, "\n"); }
+<STRING>\\\n                { strcat(string_buf, "\n"); }
 <STRING>\\t                 { strcat(string_buf, "\t"); }
 <STRING>\"                  { BEGIN INITIAL; cool_yylval.symbol = stringtable.add_string(string_buf); return STR_CONST; }
+<STRING>[^\\]\n             { cool_yylval.error_msg = "Unterminated string constant"; return ERROR; }
+<STRING><<EOF>>             { cool_yylval.error_msg = "EOF in string constant"; BEGIN INITIAL; return ERROR; }
 
 
  /* Comments */
 
 {SNGL_CMMT}                  { }
+<INITIAL>\*\)				 { cool_yylval.error_msg = "Unmatched *)"; return ERROR; }
 <INITIAL,COMMENT>{SRT_CMMT}  { comments++; BEGIN COMMENT; }
 <COMMENT>{END_CMNT}          { comments--; if(comments == 0) BEGIN INITIAL; }
 <COMMENT>{ANY_CHAR}          { }
@@ -205,6 +210,7 @@ ANY_CHAR		.
 {LSQB}       { return int('['); }
 {RSQB}       { return int(']'); }
 {TILDE}      { return int('~'); }
+{AT}         { return int('@'); }
 
  /* String constants (C syntax) */
 
