@@ -166,11 +166,25 @@ ANY_CHAR		.
 
 <INITIAL>\"                 { strcpy(string_buf, ""); BEGIN STRING; }
 <STRING>[^\"]               { strcat(string_buf, yytext); }
-<STRING>\\n                 { strcat(string_buf, "\n"); }
 <STRING>\\\n                { strcat(string_buf, "\n"); }
+<STRING>\\n                 { strcat(string_buf, "\n"); }
 <STRING>\\t                 { strcat(string_buf, "\t"); }
-<STRING>\"                  { BEGIN INITIAL; cool_yylval.symbol = stringtable.add_string(string_buf); return STR_CONST; }
-<STRING>[^\\]\n             { cool_yylval.error_msg = "Unterminated string constant"; return ERROR; }
+<STRING>\\b                 { strcat(string_buf, "\b"); }
+<STRING>\\f                 { strcat(string_buf, "\f"); }
+<STRING>\\.                 { strcat(string_buf, yytext + 1); }
+
+<STRING>\" {
+    BEGIN INITIAL;
+    cool_yylval.symbol = stringtable.add_string(string_buf);
+    return STR_CONST;
+}
+
+<STRING>\n {
+    cool_yylval.error_msg = "Unterminated string constant";
+    BEGIN INITIAL;
+    return ERROR;
+}
+
 <STRING><<EOF>>             { cool_yylval.error_msg = "EOF in string constant"; BEGIN INITIAL; return ERROR; }
 
 
